@@ -8,8 +8,12 @@ class CMDRun(JsonifyCommand):
         self.cmd_args = args[1:]
 
     def execute(self):
-        if self.cmd_type == 'inline':
-            last_output = None
+        if self.cmd_type == 'exec':
+            for cmd in self.cmd_args:
+                exec(cmd.replace('$root', 'self.root').replace('$output', 'last_output'))
+            return self.root
+        elif self.cmd_type == 'eval':
+            last_output = self.root
             for cmd in self.cmd_args:
                 last_output = eval(cmd.replace('$root', 'self.root').replace('$output', 'last_output'))
             return last_output

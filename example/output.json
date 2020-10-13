@@ -3,7 +3,7 @@
         "type": "str",
         "cmd": [
             ["select_one", "x", "//title/text()"],
-            ["run", "inline", "to_lower = lambda text: text.lower()", "to_lower($root)"]
+            ["run", "eval", "$root.lower()"]
         ]
     },
     "description": {
