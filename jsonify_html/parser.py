@@ -1,7 +1,6 @@
 import json
 from .cmd import COMMANDS
-from lxml.html.html5parser import fromstring
-from lxml.html import parse
+from lxml.html import fromstring, parse
 
 
 class JsonifyHtml:
