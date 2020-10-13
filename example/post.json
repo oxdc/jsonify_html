@@ -1,0 +1,43 @@
+{
+    "title": {
+        "type": "str",
+        "cmd": [
+            ["select_one", "css", ".post-header h2"],
+            ["extract_text"],
+            ["strip"]
+        ]
+    },
+    "image": {
+        "type": "str",
+        "cmd": [
+            ["select_one", "x", "//img/@src"]
+        ]
+    },
+    "meta": {
+        "type": "object",
+        "date": {
+            "type": "datetime",
+            "cmd": [
+                ["select_one", "css", ".byline date"],
+                ["extract_text"],
+                ["strip"]
+            ]
+        },
+        "author": {
+            "type": "str",
+            "cmd": [
+                ["select_one", "css", ".byline author"],
+                ["extract_text"],
+                ["strip"]
+            ]
+        },
+        "comments": {
+            "type": "int",
+            "cmd": [
+                ["select_one", "css", ".byline custom_listing_comments"],
+                ["extract_text"],
+                ["regex_replace", "([0-9]+)", "$1"]
+            ]
+        }
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "title": {
+        "type": "str",
+        "cmd": [
+            ["select_one", "x", "//title/text()"],
+            ["run", "inline", "to_lower = lambda text: text.lower()", "to_lower($root)"]
+        ]
+    },
+    "description": {
+        "type": "str",
+        "cmd": [
+            ["select_one", "x", "//meta[@name='description']/@content"]
+        ]
+    },
+    "posts": {
+        "type": "list",
+        "cmd": [
+            ["select", "css", ".post-item"],
+            ["foreach", "use_template", "post"]
+        ]
+    }
+}
