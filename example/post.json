@@ -10,7 +10,7 @@
     "image": {
         "$type": "str",
         "$cmd": [
-            ["select_one", "x", "//img/@src"]
+            ["select_one", "xpath", "//img/@src"]
         ]
     },
     "meta": {
@@ -18,7 +18,7 @@
         "date": {
             "$type": "datetime",
             "$cmd": [
-                ["select_one", "css", ".byline date"],
+                ["select_one", "css", ".byline .date"],
                 ["inner_text"],
                 ["strip"]
             ]
@@ -26,7 +26,7 @@
         "author": {
             "$type": "str",
             "$cmd": [
-                ["select_one", "css", ".byline author"],
+                ["select_one", "css", ".byline .author"],
                 ["inner_text"],
                 ["strip"]
             ]
@@ -34,9 +34,9 @@
         "comments": {
             "$type": "int",
             "$cmd": [
-                ["select_one", "css", ".byline custom_listing_comments"],
+                ["select_one", "css", ".byline .custom_listing_comments"],
                 ["inner_text"],
-                ["regex", "default", "replace", "([0-9]+)", "$1"]
+                ["regex", "default", "get_group", "([0-9]+)", "1"]
             ]
         }
     }
