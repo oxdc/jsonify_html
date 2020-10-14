@@ -23,6 +23,15 @@ def from_template(*, template_file=None, template=None, html_file=None, html=Non
     return parse_template(template, page)
 
 
+def load_template(template_dir, root_template):
+    root_template = root_template if isinstance(root_template, Path) else Path(root_template)
+    with open(root_template, encoding='utf-8') as root_template_reader:
+        template = root_template_reader.read()
+    template_dir = template_dir if isinstance(template_dir, Path) else Path(template_dir)
+    template = preprocess(template, template_dir)
+    return template
+
+
 def preprocess(template, root_dir):
     for match in include_statement.finditer(template):
         include_file = match.group(1)
@@ -33,9 +42,4 @@ def preprocess(template, root_dir):
 
 
 def from_dir(*, template_dir, root_template, html_file=None, html=None):
-    root_template = root_template if isinstance(root_template, Path) else Path(root_template)
-    with open(root_template, encoding='utf-8') as root_template_reader:
-        template = root_template_reader.read()
-    template_dir = template_dir if isinstance(template_dir, Path) else Path(template_dir)
-    template = preprocess(template, template_dir)
-    return from_template(template=template, html_file=html_file, html=html)
+    return from_template(template=load_template(template_dir, root_template), html_file=html_file, html=html)

@@ -6,6 +6,7 @@ from .implementations.strip import CMDStrip
 from .implementations.regex import CMDRegex
 from .implementations.inner_text import CMDInnerText
 from .implementations.foreach import CMDForEach
+from .base import JsonifyCommand
 
 register_command(CMDSelect, name='select')
 register_command(CMDSelectOne, name='select_one')

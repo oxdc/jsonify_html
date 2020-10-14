@@ -1,2 +1,2 @@
 from jsonify_html.cmd.exceptions import *
-from .main import from_template, from_dir
+from .main import from_template, from_dir, load_template
