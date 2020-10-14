@@ -7,6 +7,18 @@ def convert_type(type_name, obj):
         return eval(f'{type_name}(obj)')
     elif type_name in ['datetime', 'date', 'time']:
         return datetime_parser.parse(obj).isoformat()
+    elif type_name == 'list':
+        if obj is None:
+            return list()
+        return obj if isinstance(obj, list) else list(obj)
+    elif type_name == 'set':
+        if obj is None:
+            return list()
+        return list(obj) if isinstance(obj, set) else list(set(obj))
+    elif type_name == 'dict':
+        if obj is None:
+            return dict()
+        return obj if isinstance(obj, dict) else dict(obj)
     else:
         return obj
 

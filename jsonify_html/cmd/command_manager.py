@@ -20,6 +20,8 @@ class CommandManager:
 
     def run_commands(self, cmd_lines, root):
         for cmd_line in cmd_lines:
+            if root is None:
+                return None
             root = self.run_command(cmd_line[0], cmd_line[1:], root)
         return root
 
