@@ -8,3 +8,11 @@ class RunTimeError(Exception):
 
 class ValidatorError(Exception):
     pass
+
+
+class CommandTypeError(Exception):
+    pass
+
+
+class CommandNotFound(Exception):
+    pass

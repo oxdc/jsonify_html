@@ -1,9 +1,9 @@
-from .base import JsonifyCommand
-from .exceptions import ArgumentError
+from ..base import JsonifyCommand
+from ..exceptions import ArgumentError
 from lxml.cssselect import CSSSelector
 
 
-class CMDSelect(JsonifyCommand):
+class CMDSelectOne(JsonifyCommand):
     def __init__(self, root, args):
         super().__init__(root)
         self.implementation, self.selector = args
@@ -15,4 +15,5 @@ class CMDSelect(JsonifyCommand):
             xpath = CSSSelector(self.selector).path
         else:
             raise ArgumentError('invalid selector implementation.')
-        return self.root.xpath(xpath)
+        results = self.root.xpath(xpath)
+        return results[0] if len(results) > 0 else None

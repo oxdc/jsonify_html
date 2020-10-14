@@ -1,2 +1,2 @@
-from .parser import JsonifyHtml
-from .cmd.exceptions import *
+from jsonify_html.cmd.exceptions import *
+from .main import from_template

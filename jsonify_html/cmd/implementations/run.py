@@ -1,4 +1,4 @@
-from .base import JsonifyCommand
+from ..base import JsonifyCommand
 
 
 class CMDRun(JsonifyCommand):

@@ -1,22 +1,22 @@
 {
     "title": {
-        "type": "str",
-        "cmd": [
+        "$type": "str",
+        "$cmd": [
             ["select_one", "x", "//title/text()"],
             ["run", "eval", "$root.lower()"]
         ]
     },
     "description": {
-        "type": "str",
-        "cmd": [
+        "$type": "str",
+        "$cmd": [
             ["select_one", "x", "//meta[@name='description']/@content"]
         ]
     },
     "posts": {
-        "type": "list",
-        "cmd": [
+        "$type": "list",
+        "$cmd": [
             ["select", "css", ".post-item"],
-            ["foreach", "use_template", "post"]
+            ["foreach", "$include(post)"]
         ]
     }
 }
