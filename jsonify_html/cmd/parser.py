@@ -34,6 +34,9 @@ def convert_type(type_name, obj):
 def build_object(template, root):
     obj = dict()
     for key, content in template.items():
+        if '$type' not in content:
+            obj[key] = content
+            continue
         content_type = content['$type']
         if content_type in ['object', 'obj']:
             obj[key] = dict()
