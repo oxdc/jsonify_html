@@ -55,5 +55,10 @@ def build_object(template, root):
 def parse_template(template, root):
     if '$type' in template:
         return build_object({'$_plain': template}, root)['$_plain']
+    elif '$cases' in template:
+        for case in template['$cases']:
+            if CommandManager().run_commands(case['$if'], root):
+                return CommandManager().run_commands(case['$then'], root)
+        return template.get('$fallback', None)
     else:
         return build_object(template, root)
