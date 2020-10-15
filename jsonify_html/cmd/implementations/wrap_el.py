@@ -2,7 +2,7 @@ from ..base import JsonifyCommand
 from lxml.html import Element
 
 
-class CMDWarpElement(JsonifyCommand):
+class CMDWrapElement(JsonifyCommand):
     def __init__(self, root, args):
         super().__init__(root)
         self.tag = args[0]

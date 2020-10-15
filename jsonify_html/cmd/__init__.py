@@ -9,8 +9,9 @@ from .implementations.foreach import CMDForEach
 from .implementations.quote import CMDQuote
 from .implementations.unquote import CMDUnquote
 from .implementations.concat_str import CMDConcatString
-from .implementations.wrap_el import CMDWarpElement
+from .implementations.wrap_el import CMDWrapElement
 from .implementations.concat_list import CMDConcatList
+from .implementations.wrap_bare_el import CMDWrapBareElement
 from .base import JsonifyCommand
 
 register_command(CMDSelect, name='select')
@@ -24,4 +25,5 @@ register_command(CMDQuote, name='quote')
 register_command(CMDUnquote, name='unquote')
 register_command(CMDConcatString, name='concat_str')
 register_command(CMDConcatList, name='concat_list')
-register_command(CMDWarpElement, name='warp_el')
+register_command(CMDWrapElement, name='wrap_el')
+register_command(CMDWrapBareElement, name='wrap_bare_el')
