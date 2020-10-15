@@ -12,6 +12,12 @@ from .implementations.concat_str import CMDConcatString
 from .implementations.wrap_el import CMDWrapElement
 from .implementations.concat_list import CMDConcatList
 from .implementations.wrap_bare_el import CMDWrapBareElement
+from .implementations.pre_text import CMDPreText
+from .implementations.remove import CMDRemove
+from .implementations.apply import CMDApply
+from .implementations.tidy import CMDTidy
+from .implementations.minify_html import CMDMinifyHTML
+from .implementations.delete_whitespaces import CMDDeleteWhitespace
 from .base import JsonifyCommand
 
 register_command(CMDSelect, name='select')
@@ -27,3 +33,9 @@ register_command(CMDConcatString, name='concat_str')
 register_command(CMDConcatList, name='concat_list')
 register_command(CMDWrapElement, name='wrap_el')
 register_command(CMDWrapBareElement, name='wrap_bare_el')
+register_command(CMDPreText, name='pre_text')
+register_command(CMDRemove, name='remove')
+register_command(CMDApply, name='apply')
+register_command(CMDTidy, name='tidy')
+register_command(CMDMinifyHTML, name='minify_html')
+register_command(CMDDeleteWhitespace, name='delete_whitespaces')

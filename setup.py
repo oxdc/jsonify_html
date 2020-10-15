@@ -12,5 +12,5 @@ setup(
        'jsonify_html.cmd',
        'jsonify_html.cmd.implementations'
    ],
-   install_requires=['lxml', 'python-dateutil']
+   install_requires=['lxml', 'python-dateutil', 'django-htmlmin']
 )

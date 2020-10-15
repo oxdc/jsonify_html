@@ -1,5 +1,6 @@
 from jsonify_html.cmd import CommandManager
 from dateutil import parser as datetime_parser
+from lxml.html import tostring
 
 
 def convert_type(type_name, obj):
@@ -19,6 +20,8 @@ def convert_type(type_name, obj):
         if obj is None:
             return dict()
         return obj if isinstance(obj, dict) else dict(obj)
+    elif type_name == 'html':
+        return tostring(obj).decode('utf-8')
     else:
         return obj
 
@@ -30,8 +33,11 @@ def build_object(template, root):
         if content_type in ['object', 'obj']:
             obj[key] = dict()
             for obj_key, sub_template in content.items():
-                if obj_key != '$type':
+                if not obj_key.startswith('$'):
                     obj[key][obj_key] = parse_template(sub_template, root)
+            if '$cmd' in content:
+                result = CommandManager().run_commands(content['$cmd'], root) or dict()
+                obj[key] = {**obj[key], **result}
         else:
             result = CommandManager().run_commands(content['$cmd'], root)
             obj[key] = convert_type(content_type, result)

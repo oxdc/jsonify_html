@@ -8,9 +8,9 @@ class CMDWrapBareElement(JsonifyCommand):
         super().__init__(root)
         self.tag = args[0]
         self.attributes = args[1]
-        self.method = args[2]
-        self.bypass_els = args[3:]
-        if self.method in ['c', 'css']:
+        self.implementation = args[2]
+        self.bypass_els = args[3]
+        if self.implementation in ['c', 'css']:
             self.bypass_els = [CSSSelector(selector).path for selector in self.bypass_els]
 
     def match_bypass(self, el):
