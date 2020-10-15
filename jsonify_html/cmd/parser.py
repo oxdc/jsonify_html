@@ -1,13 +1,18 @@
 from jsonify_html.cmd import CommandManager
 from dateutil import parser as datetime_parser
+from datetime import datetime
 from lxml.html import tostring
 
 
 def convert_type(type_name, obj):
-    if type_name in ['str', 'int', 'bool']:
-        return eval(f'{type_name}(obj)')
+    if type_name in ['s', 'str']:
+        return str(obj) if obj is not None else ''
+    elif type_name in ['i', 'int']:
+        return int(obj) if obj is not None else 0
+    elif type_name in ['b', 'bool']:
+        return bool(obj) if obj is not None else False
     elif type_name in ['datetime', 'date', 'time']:
-        return datetime_parser.parse(obj).isoformat()
+        return datetime_parser.parse(obj).isoformat() if obj is not None else datetime.fromtimestamp(0).isoformat()
     elif type_name == 'list':
         if obj is None:
             return list()
@@ -21,7 +26,7 @@ def convert_type(type_name, obj):
             return dict()
         return obj if isinstance(obj, dict) else dict(obj)
     elif type_name == 'html':
-        return tostring(obj).decode('utf-8')
+        return tostring(obj).decode('utf-8') if obj is not None else ''
     else:
         return obj
 

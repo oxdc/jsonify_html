@@ -18,6 +18,8 @@ from .implementations.apply import CMDApply
 from .implementations.tidy import CMDTidy
 from .implementations.minify_html import CMDMinifyHTML
 from .implementations.delete_whitespaces import CMDDeleteWhitespace
+from .implementations.delete_attribs import CMDDeleteAttributes
+from .implementations.clean import CMDClean
 from .base import JsonifyCommand
 
 register_command(CMDSelect, name='select')
@@ -39,3 +41,5 @@ register_command(CMDApply, name='apply')
 register_command(CMDTidy, name='tidy')
 register_command(CMDMinifyHTML, name='minify_html')
 register_command(CMDDeleteWhitespace, name='delete_whitespaces')
+register_command(CMDDeleteAttributes, name='delete_attribs')
+register_command(CMDClean, name='clean')

@@ -33,12 +33,20 @@ def load_template(template_dir, root_template):
 
 
 def preprocess(template, root_dir):
+    anchors = []
+    include_templates = []
     for match in include_statement.finditer(template):
         include_file = match.group(1)
         with open(root_dir / f'{include_file}.json', encoding='utf-8') as include_file_reader:
             include_template = include_file_reader.read()
-        template = template[:match.start()] + include_template + template[match.end():]
-    return json.loads(template)
+        anchors.extend(match.span())
+        include_templates.append(include_template)
+    anchors = [0, *anchors]
+    parsed_template = ''
+    for i, include_template in enumerate(include_templates):
+        parsed_template += template[anchors[i*2]:anchors[i*2+1]] + include_template
+    parsed_template += template[anchors[-1]:]
+    return json.loads(parsed_template)
 
 
 def from_dir(*, template_dir, root_template, html_file=None, html=None):
