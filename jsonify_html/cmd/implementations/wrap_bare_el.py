@@ -19,11 +19,22 @@ class CMDWrapBareElement(JsonifyCommand):
                 return True
         return False
 
+    @staticmethod
+    def remove_preserve_tail(element):
+        prev = element.getprevious()
+        parent = element.getparent()
+        if element.tail:
+            if prev is not None:
+                prev.tail = (prev.tail or '') + element.tail
+            else:
+                parent.text = (parent.text or '') + element.tail
+        parent.remove(element)
+
     def execute(self):
         copy = fromstring(tostring(self.root))
         for child in copy:
             if self.match_bypass(child):
-                copy.remove(child)
+                self.remove_preserve_tail(child)
         copy.tag = self.tag
         for key, value in self.attributes.items():
             copy.attrib[key] = value

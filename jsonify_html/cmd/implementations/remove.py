@@ -1,6 +1,7 @@
 from ..base import JsonifyCommand
 from ..exceptions import ArgumentError
 from lxml.cssselect import CSSSelector
+from lxml.html import tostring
 
 
 class CMDRemove(JsonifyCommand):

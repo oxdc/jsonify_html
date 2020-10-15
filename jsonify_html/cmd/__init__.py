@@ -5,6 +5,7 @@ from .implementations.run import CMDRun
 from .implementations.strip import CMDStrip
 from .implementations.regex import CMDRegex
 from .implementations.inner_text import CMDInnerText
+from .implementations.inner_html import CMDInnerHTML
 from .implementations.foreach import CMDForEach
 from .implementations.quote import CMDQuote
 from .implementations.unquote import CMDUnquote
@@ -29,6 +30,7 @@ register_command(CMDRun, name='run')
 register_command(CMDStrip, name='strip')
 register_command(CMDRegex, name='regex')
 register_command(CMDInnerText, name='inner_text')
+register_command(CMDInnerHTML, name='inner_html')
 register_command(CMDForEach, name='foreach')
 register_command(CMDQuote, name='quote')
 register_command(CMDUnquote, name='unquote')
