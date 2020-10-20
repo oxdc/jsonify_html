@@ -22,8 +22,8 @@ class CommandManager:
 
     def run_command_line(self, cmd_line, root):
         name = cmd_line[0]
-        kwargs = cmd_line.pop() if isinstance(cmd_line[-1], dict) else dict()
-        args = cmd_line[1:]
+        kwargs = cmd_line[-1] if isinstance(cmd_line[-1], dict) else dict()
+        args = cmd_line[1:-1] if isinstance(cmd_line[-1], dict) else cmd_line[1:]
         return self.run_command(name, root, *args, **kwargs)
 
     def run_command_lines(self, cmd_lines, root):
