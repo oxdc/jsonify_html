@@ -1,2 +1,4 @@
-from jsonify_html.cmd.exceptions import *
-from .main import from_template, from_dir, load_template
+import jsonify_html.cmd.buildin_cmd
+from .command_manager import register_command
+from .exceptions import *
+from .parser import from_package, from_template, TemplatePackage
