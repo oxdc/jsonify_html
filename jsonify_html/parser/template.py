@@ -14,7 +14,7 @@ use_statement = re.compile(r'\$use\(\s*([^()]+)\s*\)')
 
 def parse_use_statement(statement):
     matches = use_statement.findall(statement or '')
-    return matches[0] + '.json' if matches else None
+    return TemplateCache().get_by_name(matches[0]) if matches else None
 
 
 def parse_template(template, root):

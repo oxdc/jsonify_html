@@ -5,7 +5,7 @@ from lxml.html import Element
 from lxml.html import tostring, fromstring
 from typing import Iterable
 from tidylib import tidy_fragment
-from ..parser.template import parse_template
+from ..parser.template import parse_template, parse_use_statement
 from ..parser.selector import parse_selector
 from ..command_manager import register_command
 from ..template_manager import TemplateCache
@@ -24,6 +24,13 @@ def cmd_recursive(root):
         if templates:
             remove_preserve_tail(el)
     return results
+
+
+@register_command('foreach')
+def cmd_foreach(root, template):
+    if isinstance(template, str):
+        template = parse_use_statement(template)
+    return [parse_template(template, child) for child in root]
 
 
 @register_command('clean')
