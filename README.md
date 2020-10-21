@@ -77,7 +77,7 @@ Our goal is to extract useful information in a HTML document. It's extremely use
 </html>
 ```
 
-We want a well-structured data, presented as an object  in Python, or `JSON` for elsewhere. Let's try to write a **template**:
+We want well-structured data, presented as an object  in Python, or `JSON` for elsewhere. Let's try to write a **template**:
 
 ```json
 // main.json
@@ -94,7 +94,7 @@ where `$type` tells the parser, our final object is a `list`, `$cmd`  is a list 
 
 * `select_one` extracts `div.post-list` from our webpage, you may use either CSS or XPATH selectors.  
 
-* `recursive` tells the parser *automatically* identifies and parses every DOM inside `div.post-list` (which is extracted by the preceding command. ).
+* `recursive` tells the parser to *automatically* identify and process every DOM inside `div.post-list` (which is extracted by the preceding command. ).
 
 It works like magic! Right? All we need to do next, is to write some **sub-templates** to instruct the parser.
 
@@ -178,7 +178,7 @@ It does work like magic! We finally got,
 ]
 ```
 
-What if we want to abbreviate those templates as a single one? It's straight forward with `foreach` command:
+What if we want to abbreviate those templates as a single one? It's straight forward with the `foreach` command:
 
 ```json
 // template.json
