@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
    name='jsonify_html',
-   version='1.0.3',
+   version='1.0.5',
    description='Template-based HTML-to-JSON parser.',
    author='oxdc',
    author_email='projaias@outlook.com',

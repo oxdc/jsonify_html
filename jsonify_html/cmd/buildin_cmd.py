@@ -7,7 +7,7 @@ from typing import Iterable
 from tidylib import tidy_fragment
 from ..parser.template import parse_template, parse_use_statement
 from ..parser.selector import parse_selector
-from ..command_manager import register_command
+from ..command_manager import register_command, CommandManager
 from ..template_manager import TemplateCache
 from ..utils import remove_preserve_tail
 
@@ -27,7 +27,9 @@ def cmd_recursive(root):
 
 
 @register_command('foreach')
-def cmd_foreach(root, template):
+def cmd_foreach(root, *args, template=None):
+    if template is None and args:
+        return [CommandManager().run_command_line(args, child) for child in root]
     if isinstance(template, str):
         template = parse_use_statement(template)
     return [parse_template(template, child) for child in root]
