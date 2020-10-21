@@ -81,6 +81,11 @@ def cmd_strip(root):
     return root.strip()
 
 
+@register_command('split')
+def cmd_split(root, char=None):
+    return root.split(char)
+
+
 @register_command('quote')
 def cmd_quote(root):
     return quote(root)
@@ -154,6 +159,19 @@ def cmd_select(root, selector):
 @register_command('select_one')
 def cmd_select_one(root, selector):
     results = cmd_select(root, selector)
+    return results[0] if len(results) else None
+
+
+@register_command('select_or')
+def cmd_select_or(root, *selectors):
+    selectors = [parse_selector(selector) for selector in selectors]
+    selector = ' | '.join(selectors)
+    return root.xpath(selector)
+
+
+@register_command('select_one_or')
+def cmd_select_or(root, *selectors):
+    results = cmd_select_or(root, selectors)
     return results[0] if len(results) else None
 
 
