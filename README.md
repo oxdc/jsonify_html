@@ -131,7 +131,7 @@ It works like magic! Right? All we need to do next, is to write some **sub-templ
 }
 ```
 
-Notice: each key starts with `$` indicates a keyword, it tells the parser essential instructions, otherwise, it would be the data key presented in final objects. Let's simply run a demo to see what we will get,
+Notice: each key starts with `$` indicates a keyword, it tells the parser essential instructions, otherwise, it would be the data key presented in final objects. A template can also include some sub-templates *in place*, for instance, `title` is a data key, and its value is a sub-template. Let's simply run a demo to see what we will get,
 
 ```
 [folder structure]
