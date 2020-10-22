@@ -237,7 +237,7 @@ def cmd_inner_text(root):
 def cmd_inner_html(root):
     outer_html = tostring(root)
     inner_html = outer_html[outer_html.find(b'>') + 1:outer_html.rfind(b'<')]
-    return fromstring(inner_html) if inner_html else fromstring('<p></p>')
+    return fromstring(inner_html) if inner_html.strip() else fromstring('<p></p>')
 
 
 @register_command('parse_html')
