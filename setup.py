@@ -12,5 +12,5 @@ setup(
        'jsonify_html.cmd',
        'jsonify_html.parser'
    ],
-   install_requires=['lxml', 'pytidylib', 'python-dateutil', 'django-htmlmin']
+   install_requires=['lxml', 'pytidylib', 'python-dateutil', 'django-htmlmin', 'cssselect']
 )
