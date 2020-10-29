@@ -141,6 +141,16 @@ def cmd_remove(root, *args):
     return root
 
 
+@register_command('remove_one')
+def cmd_remove(root, *args):
+    for selector in args:
+        xpath = parse_selector(selector)
+        els = root.xpath(xpath)
+        if els:
+            remove_preserve_tail(els[0])
+    return root
+
+
 @register_command('eval')
 def cmd_eval(root, statement):
     return eval(statement.replace('$root', 'root'))
