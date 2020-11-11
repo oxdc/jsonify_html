@@ -2,7 +2,9 @@
 
 Jsonify HTML is a general-proposed, template-based parser to transform HTML to reusable JSON data. It can be thought as a *reverse engine* of template-based renders, e.g. Jinja.
 
-## Quick Start Guide
+> 🎉🎉 **Coming Soon: Jsonify HTML v2** 🎉🎉
+>
+> `include` statement, pipe, sandbox, reference, simple script and all fruitful features, all make Jsonify HTML a full-fledged parser!
 
 All we need is a HTML document,
 
