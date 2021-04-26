@@ -1,7 +1,6 @@
 from .utils import singleton
 from .exceptions import DuplicatedRegister
 from .parser.selector import parse_selector
-from lxml.html import tostring
 
 
 @singleton

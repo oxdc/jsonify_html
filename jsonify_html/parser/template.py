@@ -6,6 +6,7 @@ from datetime import datetime
 from dateutil import parser as datetime_parser
 from pathlib import Path
 import json
+import yaml
 import re
 
 
@@ -69,6 +70,22 @@ def convert_type(type_name, obj):
         return obj
 
 
+def load_template(template_file):
+    file = Path(template_file)
+    if not file.exists():
+        raise FileNotFoundError
+    if not file.is_file():
+        raise IsADirectoryError
+    with open(file) as fp:
+        if file.suffix == '.json':
+            template = json.load(fp)
+        elif file.suffix == '.yaml':
+            template = yaml.safe_load(fp)
+        else:
+            raise TypeError("Unsupported template extension")
+        return template
+
+
 def from_template(template, html):
     return parse_template(template, fromstring(html))
 
@@ -80,12 +97,10 @@ class TemplatePackage:
             self.load_template(main_template)
 
     def load_template(self, main_template):
-        with open(main_template, 'r', encoding='utf-8') as main_template_reader:
-            self.main_template = json.load(main_template_reader)
+        self.main_template = load_template(main_template)
         root_dir = Path(main_template).parent
-        for file in root_dir.glob('**/*.json'):
-            with open(str(file), 'r', encoding='utf-8') as template_reader:
-                TemplateCache().register(str(file.relative_to(root_dir)), json.load(template_reader))
+        for file in root_dir.glob('**/*.*'):
+            TemplateCache().register(str(file.relative_to(root_dir)), load_template(file))
 
     def parse_html(self, html):
         return parse_template(self.main_template, fromstring(html))
@@ -93,3 +108,7 @@ class TemplatePackage:
 
 def from_package(main_template, html):
     return TemplatePackage(main_template).parse_html(html)
+
+
+def load_package(main_template):
+    return main_template
