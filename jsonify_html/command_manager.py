@@ -22,7 +22,7 @@ class CommandManager:
             raise RunTimeError(e)
 
     def run_command_line(self, cmd_line, root):
-        if isinstance(cmd_line, list):
+        if isinstance(cmd_line, list) or isinstance(cmd_line, tuple):
             name = cmd_line[0]
             args = cmd_line[1:-1] if isinstance(cmd_line[-1], dict) else cmd_line[1:]
             kwargs = cmd_line[-1] if isinstance(cmd_line[-1], dict) else dict()

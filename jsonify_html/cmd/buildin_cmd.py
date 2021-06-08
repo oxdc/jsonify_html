@@ -253,3 +253,18 @@ def cmd_inner_html(root):
 @register_command('parse_html')
 def cmd_parse_html(root):
     return fromstring(root)
+
+
+@register_command('nonempty')
+def cmd_nonempty(root):
+    return [item for item in root if item]
+
+
+@register_command('map')
+def cmd_map(root, statement):
+    return [eval(statement.replace('$root', 'item')) for item in root]
+
+
+@register_command('filter')
+def cmd_filter(root, statement):
+    return [item for item in root if eval(statement.replace('$root', 'item'))]

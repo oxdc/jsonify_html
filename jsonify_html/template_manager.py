@@ -9,8 +9,8 @@ class TemplateCache:
         self.cache = dict()
         self.matches = dict()
 
-    def register(self, name, template):
-        if name in self.cache:
+    def register(self, name, template, overwrite=True):
+        if name in self.cache and not overwrite:
             raise DuplicatedRegister(f'duplicated template found: `{name}`.')
         self.cache[name] = template
         if '$match' in template:
