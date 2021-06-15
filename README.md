@@ -2,9 +2,48 @@
 
 Jsonify HTML is a general-proposed, template-based parser to transform HTML to reusable JSON data. It can be thought as a *reverse engine* of template-based renders, e.g. Jinja.
 
-> 🎉🎉 **Coming Soon: Jsonify HTML v2** 🎉🎉
->
-> `include` statement, pipe, sandbox, reference, simple script and all fruitful features, all make Jsonify HTML a full-fledged parser!
+---
+🎉🎉 **Coming Soon: Jsonify HTML v2** 🎉🎉
+include statement, pipe, sandbox, reference, simple script and all fruitful features, all make Jsonify HTML a full-fledged parser!
+
+A preview of new syntax (in YAML format):
+```yaml
+(version): "2.0"                     # buildin settings
+$i: 0                                # define variables
+$post:
+  Object:                            # anonymous object
+    init():                          # init() function executes before parsing
+      - clean()
+    String title:                    # type annotation
+      parse():                       # parse() function converts HTML to a JSON entry
+        - select_one(.title)         # commands are functions ...
+        - inner_text(strip=True)     # ... and can be called like those in Python
+    Datetime date:
+      parse():
+        - select_one(.date)
+        - inner_text(strip=True)
+    String author:
+      parse():
+        - select_one(.author)
+        - inner_text(strip=True)
+    Uri url:
+      parse():
+        - select_one(.//a/@href)     # xpath is fully supported
+    Integer id:
+      parse():
+        - eval($i)                   # reference to a variable
+    final():                         # final() function executes after parsing
+      - exec($i += 1)
+List[Object]:                        # nested type annotation
+  parse():
+    - select_one(article)
+    - inner_html()
+    - clean()
+    - select(.post)
+    - foreach(e -> apply(e, $post))  # lambda without side-effects
+```
+
+---
 
 All we need is a HTML document,
 
