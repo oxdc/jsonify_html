@@ -9,7 +9,9 @@ include statement, pipe, sandbox, reference, simple script and all fruitful feat
 A preview of new syntax (in YAML format):
 ```yaml
 (version): "2.0"                     # buildin settings
+
 $i: 0                                # define variables
+
 $post:
   Object:                            # anonymous object
     init():                          # init() function executes before parsing
@@ -34,6 +36,7 @@ $post:
         - eval($i)                   # reference to a variable
     final():                         # final() function executes after parsing
       - exec($i += 1)
+
 List[Object]:                        # nested type annotation
   parse():
     - select_one(article)
