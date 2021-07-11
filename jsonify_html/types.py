@@ -204,7 +204,3 @@ def as_type(type_name):
         return type_name
     else:
         return TYPES[str(type_name)]
-
-
-def isa(dtype, meta_type):
-    return isinstance(dtype, meta_type)

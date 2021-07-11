@@ -1,40 +1,48 @@
 from .types import *
+from .commands import *
+
+
+class Variable:
+    def __init__(self, name, value=undefined):
+        self.name = name
+        self.value = value
 
 
 class Node:
     def __init__(self, name, dtype, **kwargs):
         self.name = name
         self.dtype = as_type(dtype)
-        self.__root = None
+        self.root = None
+        self.children = dict()
+        self.locals = Environment()
         self.__methods = list()
-        self.__attributes = dict()
         for name, value in kwargs.items():
-            if callable(value):
-                setattr(self, name, lambda *_args, **_kwargs: value(self.__root, *_args, **_kwargs))
+            if isinstance(value, Function):
+                value.bind(self)
+                setattr(self, name, value)
                 self.__methods.append(name)
+            elif isinstance(value, Node) and isinstance(self.dtype, MapType):
+                self.children[name] = value
+            elif isinstance(value, Variable):
+                self.locals.name = value
             else:
-                self.__attributes[name] = value
-
-    @property
-    def root(self):
-        return self.__root
-
-    @root.setter
-    def root(self, root):
-        self.__root = root
+                raise AttributeError
 
     def call(self, method, *args, **kwargs):
         if hasattr(self, method):
-            self.__root = getattr(self, method)(*args, **kwargs)
+            self.root = getattr(self, method)(*args, **kwargs)
 
     def execute(self):
         self.call("init")
+        if isinstance(self.dtype, MapType):
+            for child in self.children.values():
+                child.root = self.root
         self.call("parse")
-        if isa(self.dtype, MapType):
-            pairs = [(name, node.execute()) for name, node in self.__attributes.items()]
+        if isinstance(self.dtype, MapType):
+            pairs = [(name, node.execute()) for name, node in self.children.items()]
             result = self.dtype.convert(pairs)
         else:
-            result = self.dtype.convert(self.__root)
+            result = self.dtype.convert(self.root)
         self.call("final")
         return result
 
