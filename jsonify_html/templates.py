@@ -10,6 +10,11 @@ class Variable:
         self.value = value
 
 
+class Ref:
+    def __init__(self, name):
+        self.name = name
+
+
 class Node:
     def __init__(self, name, dtype, **kwargs):
         self.name = name
@@ -26,9 +31,11 @@ class Node:
             elif isinstance(value, Node) and isinstance(self.dtype, MapType):
                 self.children[name] = value
             elif isinstance(value, Variable):
-                self.locals.name = value
+                self.locals[name] = value
             else:
                 raise AttributeError
+        for node in self.children.values():
+            node.locals.extend(self.locals)
 
     def call(self, method, *args, **kwargs):
         if hasattr(self, method):
@@ -61,8 +68,9 @@ class Template:
         pass
 
 
-FUNCTION_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*\([^()]*\)$")
+FUNCTION_PATTERN = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)\(([^()]*)\)$")
 ENTRY_PATTERN = re.compile(r"^([a-zA-Z][a-zA-Z0-9\[\],]+)\s+([a-zA-Z_][a-zA-Z0-9_]*)$")
+COMMA_PATTERN = re.compile(r",(?![^(]*\))")
 
 
 def parse_variable(name, data):
@@ -74,14 +82,27 @@ def parse_lambda(data):
     pass
 
 
+def parse_arg(data):
+    arg = data.strip()
+    if "->" in arg:
+        return parse_lambda(arg)
+    elif "$" in arg:
+        return Ref(arg)
+    else:
+        pass
+
+
 def parse_command(data):
-    return Command()
+    name, arg_list = FUNCTION_PATTERN.match(data).groups()
+    args = [parse_arg(arg) for arg in COMMA_PATTERN.split(arg_list)]
 
 
 def parse_function(head, data):
+    name, arg_list = FUNCTION_PATTERN.match(head).groups()
+    argv = [arg.strip() for arg in arg_list.split(",")]
     assert isinstance(data, list)
     commands = [parse_command(line) for line in data]
-    return Function(commands)
+    return Function(name, argv, commands)
 
 
 def parse_entry(name, dtype, data):
