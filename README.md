@@ -8,7 +8,7 @@ include statement, pipe, sandbox, reference, simple script and all fruitful feat
 
 A preview of new syntax (in YAML format):
 ```yaml
-(version): "2.0"                     # buildin settings
+# version: "2.0"                     # buildin settings
 
 $i: 0                                # define variables
 
@@ -21,21 +21,19 @@ $post:
         - select_one(.title)         # commands are functions ...
         - inner_text(strip=True)     # ... and can be called like those in Python
     Datetime date:
-      parse():
-        - select_one(.date)
-        - inner_text(strip=True)
+      - select_one(.date)            # parse() can be omitted for simple entries
+      - inner_text(strip=True)
     String author:
-      parse():
-        - select_one(.author)
-        - inner_text(strip=True)
+      - select_one(.author)
+      - inner_text(strip=True)
     Uri url:
-      parse():
-        - select_one(.//a/@href)     # xpath is fully supported
+      - select_one(.//a/@href)       # xpath is fully supported
     Integer id:
-      parse():
-        - eval($i)                   # reference to a variable
-    final():                         # final() function executes after parsing
+      - eval($i)                     # reference to a variable
+    increment_id():                  # define a method called increment_id
       - exec($i += 1)
+    final():                         # final() function executes after parsing
+      - increment_id()               # methods are commands, too
 
 List[Object]:                        # nested type annotation
   parse():
