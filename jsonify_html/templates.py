@@ -1,5 +1,7 @@
 from .types import *
 from .commands import *
+import ruamel.yaml as yaml
+import re
 
 
 class Variable:
@@ -52,4 +54,65 @@ class Package:
 
 
 class Template:
+    def __init__(self, file, root):
+        pass
+
+    def parse(self, html):
+        pass
+
+
+FUNCTION_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*\([^()]*\)$")
+ENTRY_PATTERN = re.compile(r"^([a-zA-Z][a-zA-Z0-9\[\],]+)\s+([a-zA-Z_][a-zA-Z0-9_]*)$")
+
+
+def parse_variable(name, data):
+    value = parse_map(name, Mapping[String, Any], data) if isinstance(data, dict) else data
+    return Variable(name, value)
+
+
+def parse_lambda(data):
     pass
+
+
+def parse_command(data):
+    return Command()
+
+
+def parse_function(head, data):
+    assert isinstance(data, list)
+    commands = [parse_command(line) for line in data]
+    return Function(commands)
+
+
+def parse_entry(name, dtype, data):
+    if isinstance(data, dict):
+        return parse_map(name, as_type(dtype), data)
+    elif isinstance(data, list):
+        return Node(name, dtype, parse=parse_function("parse()", data))
+    else:
+        raise ValueError
+
+
+def parse_map(name, dtype, data):
+    children = dict()
+    for name, child in data.items():
+        name = name.strip()
+        match_function = FUNCTION_PATTERN.match(name)
+        match_entry = ENTRY_PATTERN.match(name)
+        if name.startswith("$"):
+            children[name] = parse_variable(name, child)
+        elif match_function and isinstance(child, list):
+            children[name] = parse_function(name, child)
+        elif match_entry:
+            entry_type, entry_name = match_entry.groups()
+            children[name] = parse_entry(entry_name, entry_type, child)
+        else:
+            raise ValueError
+    return Node(name, dtype, **children)
+
+
+def parse_template(template):
+    data = yaml.round_trip_load(template)
+    assert isinstance(data, dict)
+    root = parse_map("<template>", Mapping[String, Any], data)
+    return Template(template, root)

@@ -27,7 +27,7 @@ class Command:
 
 
 class Function:
-    def __init__(self, node=None, commands=None):
+    def __init__(self, commands=None, *, node=None):
         self.__node = node
         self.commands = commands if commands is not None else []
 
