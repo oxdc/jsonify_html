@@ -1,5 +1,6 @@
 from inspect import getmembers, isfunction
 from struct import pack, unpack
+from .utils import singleton
 
 
 class DataType:
@@ -10,15 +11,24 @@ class DataType:
 Any = DataType()
 
 
-class __BoolType(DataType):
+@singleton
+class UndefinedType(DataType):
+    def convert(self, obj):
+        return None
+
+
+undefined = Undefined = UndefinedType()
+
+
+class BoolType(DataType):
     def convert(self, obj):
         return bool(obj)
 
 
-Boolean = Bool = __BoolType()
+Boolean = Bool = BoolType()
 
 
-class __IntType(DataType):
+class IntType(DataType):
     def __init__(self, *, size=None, signed=True):
         self.size = size // 8 if size else None
         self.signed = signed
@@ -40,22 +50,22 @@ class __IntType(DataType):
             return result
 
 
-Integer = BigInt = Int = __IntType()
-Char = Int8 = __IntType(size=8, signed=True)
-UChar = UInt8 = __IntType(size=8, signed=False)
-Int16 = __IntType(size=16, signed=True)
-UInt16 = __IntType(size=16, signed=False)
-Int32 = __IntType(size=32, signed=True)
-UInt32 = __IntType(size=32, signed=False)
-Int64 = __IntType(size=64, signed=True)
-UInt64 = __IntType(size=64, signed=False)
-Int128 = __IntType(size=128, signed=True)
-UInt128 = __IntType(size=128, signed=False)
-Int256 = __IntType(size=256, signed=True)
-UInt256 = __IntType(size=256, signed=False)
+Integer = BigInt = Int = IntType()
+Char = Int8 = IntType(size=8, signed=True)
+UChar = UInt8 = IntType(size=8, signed=False)
+Int16 = IntType(size=16, signed=True)
+UInt16 = IntType(size=16, signed=False)
+Int32 = IntType(size=32, signed=True)
+UInt32 = IntType(size=32, signed=False)
+Int64 = IntType(size=64, signed=True)
+UInt64 = IntType(size=64, signed=False)
+Int128 = IntType(size=128, signed=True)
+UInt128 = IntType(size=128, signed=False)
+Int256 = IntType(size=256, signed=True)
+UInt256 = IntType(size=256, signed=False)
 
 
-class __FloatType(DataType):
+class FloatType(DataType):
     def __init__(self, fmt=None):
         self.fmt = fmt
 
@@ -66,20 +76,20 @@ class __FloatType(DataType):
             return float(obj)
 
 
-Float16 = __FloatType(fmt="<e")
-Float32 = __FloatType(fmt="<f")
-Float64 = __FloatType(fmt="<d")
+Float16 = FloatType(fmt="<e")
+Float32 = FloatType(fmt="<f")
+Float64 = FloatType(fmt="<d")
 
 
-class __StringType(DataType):
+class StringType(DataType):
     def convert(self, obj):
         return str(obj)
 
 
-Text = String = Str = __StringType()
+Text = String = Str = StringType()
 
 
-class __ListType(DataType):
+class ListType(DataType):
     def __init__(self, etype=None):
         self.etype = etype
 
@@ -91,10 +101,10 @@ class __ListType(DataType):
         return [self.etype.convert(item) for item in iter(obj)]
 
 
-List = __ListType()
+List = ListType()
 
 
-class __MapType(DataType):
+class MapType(DataType):
     def __init__(self, ktype=None, vtype=None):
         self.ktype = ktype
         self.vtype = vtype
@@ -110,10 +120,10 @@ class __MapType(DataType):
             return {self.ktype.convert(key): self.vtype.convert(value) for key, value in iter(obj)}
 
 
-HashTable = Dictionary = Dict = Mapping = __MapType()
+HashTable = Dictionary = Dict = Mapping = MapType()
 
 
-class __SetType(DataType):
+class SetType(DataType):
     def __init__(self):
         self.etype = None
 
@@ -125,10 +135,10 @@ class __SetType(DataType):
         return {self.etype.convert(item) for item in iter(obj)}
 
 
-Set = __SetType()
+Set = SetType()
 
 
-class __TupleType(DataType):
+class TupleType(DataType):
     def __init__(self, *types):
         self.types = types
 
@@ -140,4 +150,61 @@ class __TupleType(DataType):
         return tuple(etype.convert(item) for etype, item in zip(self.types, iter(obj)))
 
 
-Tuple = __TupleType()
+Tuple = TupleType()
+
+
+class DateTimeType(DataType):
+    def convert(self, obj):
+        pass
+
+
+DateTime = DateTimeType()
+
+
+TYPES = {
+    "Any": Any,
+    "Boolean": Boolean,
+    "Bool": Bool,
+    "Integer": Integer,
+    "BigInt": BigInt,
+    "Int": Int,
+    "Char": Char,
+    "Int8": Int8,
+    "UChar": UChar,
+    "UInt8": UInt8,
+    "Int16": Int16,
+    "UInt16": UInt16,
+    "Int32": Int32,
+    "UInt32": UInt32,
+    "Int64": Int64,
+    "UInt64": UInt64,
+    "Int128": Int128,
+    "UInt128": UInt128,
+    "Int256": Int256,
+    "UInt256": UInt256,
+    "Float16": Float16,
+    "Float32": Float32,
+    "Float64": Float64,
+    "Text": Text,
+    "String": String,
+    "Str": Str,
+    "List": List,
+    "HashTable": HashTable,
+    "Dictionary": Dictionary,
+    "Dict": Dict,
+    "Mapping": Mapping,
+    "Set": Set,
+    "Tuple": Tuple,
+    "DateTime": DateTime
+}
+
+
+def as_type(type_name):
+    if isinstance(type_name, DataType):
+        return type_name
+    else:
+        return TYPES[str(type_name)]
+
+
+def isa(dtype, meta_type):
+    return isinstance(dtype, meta_type)
