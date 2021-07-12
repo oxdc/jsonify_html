@@ -206,3 +206,14 @@ def as_type(type_name):
         return type_name
     else:
         return TYPES[str(type_name)]
+
+
+class Variable:
+    def __init__(self, name, value=undefined):
+        self.name = name
+        self.value = value
+
+
+class Ref:
+    def __init__(self, name):
+        self.name = name

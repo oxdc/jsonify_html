@@ -4,17 +4,6 @@ import ruamel.yaml as yaml
 import re
 
 
-class Variable:
-    def __init__(self, name, value=undefined):
-        self.name = name
-        self.value = value
-
-
-class Ref:
-    def __init__(self, name):
-        self.name = name
-
-
 class Function:
     def __init__(self, arg_names, commands):
         self.node = None
