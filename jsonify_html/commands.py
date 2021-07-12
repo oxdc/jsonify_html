@@ -1,6 +1,8 @@
+import re
+
 from lxml.html.clean import Cleaner
 from lxml.cssselect import CSSSelector
-from .types import Variable
+from .types import *
 import functools
 
 
@@ -32,12 +34,12 @@ def remove_preserve_tail(element):
 
 
 @read_only
-def cmd_clean(root, **kwargs):
-    return Cleaner(**kwargs).clean_html(root)
+def cmd_clean(node, **kwargs):
+    return Cleaner(**kwargs).clean_html(node.root)
 
 
 @read_only
-def cmd_select(root, selector=None, *, css=None, xpath=None, first=False):
+def cmd_select(node, selector=None, *, css=None, xpath=None, first=False):
     if selector is not None:
         selectors = selector if isinstance(selector, list) else [selector]
         xpaths = map(parse_selector, selectors)
@@ -50,28 +52,84 @@ def cmd_select(root, selector=None, *, css=None, xpath=None, first=False):
         raise ValueError
     DOMs = []
     for xpath in xpaths:
-        DOMs.extend(root.xpath(xpath))
+        DOMs.extend(node.root.xpath(xpath))
     return DOMs[0] if first and DOMs else DOMs
 
 
 @read_only
-def cmd_remove(root, selector=None, *, css=None, xpath=None, first=False):
-    DOMs = cmd_select(root, selector, css=css, xpath=xpath, first=first)
+def cmd_remove(node, selector=None, *, css=None, xpath=None, first=False):
+    DOMs = cmd_select(node.root, selector, css=css, xpath=xpath, first=first)
     if first and DOMs:
         remove_preserve_tail(DOMs[0])
     else:
         for DOM in DOMs:
             remove_preserve_tail(DOM)
-    return root
+    return node.root
 
 
 @read_only
-def cmd_text(root, *, insert_space=True, normalize_spaces=True, ):
-    return root.text or ""
+def cmd_text(node, *, insert_space=True, normalize_spaces=True, ):
+    return node.root.text or ""
+
+
+def cmd_eval(node, expr):
+    if isinstance(expr, Function):
+        return expr(node)
+    elif isinstance(expr, Variable):
+        return expr.value
+    elif isinstance(expr, str):
+        _expr = expr
+        for var in re.findall(r"\$[a-zA-Z0-9_]+", expr):
+            _var = node.get_variable(Ref(name=var.strip('$')))
+            _expr = _expr.replace(var, str(_var.value) if _var is not None else "None")
+        return eval(_expr)
+    else:
+        return node.root
+
+
+def cmd_exec(node, expr):
+    if isinstance(expr, Function):
+        expr(node)
+    elif isinstance(expr, str):
+        _expr = expr
+        for var in re.findall(r"\$[a-zA-Z0-9_]+", expr):
+            _var = node.get_variable(Ref(name=var.strip('$')))
+            _expr = _expr.replace(var, str(_var.value) if _var is not None else "None")
+        exec(_expr)
+    return node.root
+
+
+def cmd_print(node, *args, **kwargs):
+    print(*args, **kwargs)
+    return node.root
+
+
+def cmd_set(node, variable, value):
+    assert isinstance(variable, Variable)
+    if isinstance(value, Function):
+        variable.value = value(node)
+    else:
+        variable.value = value
+    return node.root
+
+
+def cmd_foreach(node, func):
+    assert isinstance(func, Function)
+    root = []
+    for item in node.root:
+        node.root = item
+        root.append(func(node))
+    node.root = root
+    return root
 
 
 build_in_commands = {
     "clean": cmd_clean,
     "select": cmd_select,
-    "text": cmd_text
+    "text": cmd_text,
+    "eval": cmd_eval,
+    "exec": cmd_exec,
+    "print": cmd_print,
+    "set": cmd_set,
+    "foreach": cmd_foreach
 }

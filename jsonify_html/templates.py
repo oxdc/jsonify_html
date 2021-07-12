@@ -1,43 +1,7 @@
-from .types import *
-from .commands import build_in_commands
 import ruamel.yaml as yaml
 import re
-
-
-class Function:
-    def __init__(self, arg_names, commands):
-        self.node = None
-        self.arg_names = arg_names
-        self.args = {arg: None for arg in arg_names}
-        self.commands = commands or []
-
-    def __from_node(self, arg):
-        return self.node.get_variable(arg) if isinstance(arg, Ref) else arg
-
-    def __from_local(self, arg):
-        return self.node.get_variable(arg) or self.args.get(arg.name, None) if isinstance(arg, Ref) else arg
-
-    def parse_args(self, args, kwargs):
-        for name, arg in zip(self.arg_names, args):
-            self.args[name] = self.__from_node(arg)
-        for name, arg in kwargs.items():
-            assert name in self.arg_names
-            self.args[name] = self.__from_node(arg)
-
-    def __call__(self, node, *args, **kwargs):
-        self.node = node
-        assert self.node is not None
-        assert len(args) + len(kwargs) <= len(self.arg_names)
-        self.parse_args(args, kwargs)
-        for cmd, cmd_args, cmd_kwargs in self.commands:
-            func = self.node.get_cmd(cmd)
-            _args = [self.__from_local(arg) for arg in cmd_args]
-            _kwargs = {key: self.__from_local(arg) for key, arg in cmd_kwargs.items()}
-            self.node.root = func(self.node.root, *_args, **_kwargs)
-        return self.node.root
-
-
-trivial_function = Function([], [])
+from .types import *
+from .commands import build_in_commands
 
 
 class Node:
@@ -59,6 +23,7 @@ class Node:
             elif isinstance(value, Variable):
                 self.variables[name] = value
             else:
+                print(name, value)
                 raise AttributeError
         for node in self.children.values():
             node.variables.update(self.variables)
@@ -86,10 +51,10 @@ class Node:
 
 
 VARIABLE_PATTERN = re.compile(r"^\$([a-zA-Z_][a-zA-Z0-9_]*)$")
-FUNCTION_PATTERN = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)\(([^()]*)\)$")
-LAMBDA_PATTERN = re.compile(r"->")  # TODO
+FUNCTION_PATTERN = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)\((.*?)\)$")
+LAMBDA_PATTERN = re.compile(r"^\(*([^()]*)\)*\s*->\s*([a-zA-Z0-9_]+)\((.*)\)$")
 ENTRY_PATTERN = re.compile(r"^([a-zA-Z][a-zA-Z0-9\[\],]+)\s+([a-zA-Z_][a-zA-Z0-9_]*)$")
-COMMA_PATTERN = re.compile(r",(?![^(]*\))")
+KEYWORD_ARGUMENT_PATTERN = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(.+)$")
 
 
 def parse_variable(name, data):
@@ -100,11 +65,17 @@ def parse_variable(name, data):
 def parse_arg(arg):
     match_variable = VARIABLE_PATTERN.match(arg)
     match_lambda = LAMBDA_PATTERN.match(arg)
+    match_function = FUNCTION_PATTERN.match(arg)
     if match_variable:
         name, = match_variable.groups()
         return Ref(name)
     elif match_lambda:
-        return lambda x: x  # TODO
+        head, cmd, arg_list = match_lambda.groups()
+        arg_names = [arg.strip() for arg in head.split(",")]
+        args, kwargs = parse_args(split_at_comma(arg_list))
+        return Function(arg_names, [(cmd, args, kwargs)])
+    elif match_function:
+        return Function([], [parse_command(arg)])
     else:
         return yaml.safe_load(arg)
 
@@ -113,19 +84,64 @@ def parse_args(data):
     args = list()
     kwargs = dict()
     for item in data:
+        match_kw = KEYWORD_ARGUMENT_PATTERN.match(item.strip())
         if not item.strip():
             continue
-        if '=' in item:
-            name, arg = item.split('=')
+        if match_kw:
+            name, arg = match_kw.groups()
             kwargs[name.strip()] = parse_arg(arg.strip())
         else:
             args.append(parse_arg(item.strip()))
     return args, kwargs
 
 
+def grouped(iterable, n):
+    return zip(*[iter(iterable)]*n)
+
+
+def scan_for_comma(s):
+    poses = [0]
+    level_single_quote = 0
+    level_double_quote = 0
+    level_square_bracket = 0
+    level_round_bracket = 0
+    level_curly_bracket = 0
+    max_level = 0
+    for pos, char in enumerate(s):
+        if char == '\'':
+            level_single_quote = (level_single_quote + 1) % 2
+        elif char == '"':
+            level_double_quote = (level_double_quote + 1) % 2
+        elif char == '[':
+            level_square_bracket += 1
+        elif char == ']':
+            level_square_bracket -= 1
+        elif char == '(':
+            level_round_bracket += 1
+        elif char == ')':
+            level_round_bracket -= 1
+        elif char == '{':
+            level_curly_bracket += 1
+        elif char == '}':
+            level_curly_bracket -= 1
+        max_level = max(level_single_quote, level_double_quote,
+                        level_square_bracket, level_round_bracket, level_curly_bracket)
+        if char == ',' and max_level == 0:
+            poses.append(pos)
+            poses.append(pos+1)
+    assert max_level == 0
+    poses.append(len(s))
+    return poses
+
+
+def split_at_comma(s):
+    poses = scan_for_comma(s)
+    return [s[start:end] for start, end in grouped(poses, 2)]
+
+
 def parse_command(data):
     cmd, arg_list = FUNCTION_PATTERN.match(data).groups()
-    args, kwargs = parse_args(COMMA_PATTERN.split(arg_list))
+    args, kwargs = parse_args(split_at_comma(arg_list))
     return cmd, args, kwargs
 
 

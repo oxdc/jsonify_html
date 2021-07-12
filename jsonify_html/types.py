@@ -162,50 +162,13 @@ class DateTimeType(DataType):
 DateTime = DateTimeType()
 
 
-TYPES = {
-    "Any": Any,
-    "Boolean": Boolean,
-    "Bool": Bool,
-    "Integer": Integer,
-    "BigInt": BigInt,
-    "Int": Int,
-    "Char": Char,
-    "Int8": Int8,
-    "UChar": UChar,
-    "UInt8": UInt8,
-    "Int16": Int16,
-    "UInt16": UInt16,
-    "Int32": Int32,
-    "UInt32": UInt32,
-    "Int64": Int64,
-    "UInt64": UInt64,
-    "Int128": Int128,
-    "UInt128": UInt128,
-    "Int256": Int256,
-    "UInt256": UInt256,
-    "Float16": Float16,
-    "Float32": Float32,
-    "Float64": Float64,
-    "Text": Text,
-    "String": String,
-    "Str": Str,
-    "List": List,
-    "HashTable": HashTable,
-    "Dictionary": Dictionary,
-    "Dict": Dict,
-    "Mapping": Mapping,
-    "Object": Object,
-    "Set": Set,
-    "Tuple": Tuple,
-    "DateTime": DateTime
-}
-
-
 def as_type(type_name):
     if isinstance(type_name, DataType):
         return type_name
     else:
-        return TYPES[str(type_name)]
+        dtype = eval(type_name)
+        assert isinstance(dtype, DataType)
+        return dtype
 
 
 class Variable:
@@ -213,7 +176,54 @@ class Variable:
         self.name = name
         self.value = value
 
+    def __str__(self):
+        return f"${self.name} = {self.value}"
+
 
 class Ref:
     def __init__(self, name):
         self.name = name
+
+    def __str__(self):
+        return f"${self.name}"
+
+
+class Function:
+    def __init__(self, arg_names, commands):
+        self.node = None
+        self.arg_names = arg_names
+        self.args = {arg: None for arg in arg_names}
+        self.commands = commands or []
+
+    def __from_node(self, arg):
+        return self.node.get_variable(arg) if isinstance(arg, Ref) else arg
+
+    def __from_local(self, arg):
+        return self.node.get_variable(arg) or self.args.get(arg.name, None) if isinstance(arg, Ref) else arg
+
+    def parse_args(self, args, kwargs):
+        for name, arg in zip(self.arg_names, args):
+            self.args[name] = self.__from_node(arg)
+        for name, arg in kwargs.items():
+            assert name in self.arg_names
+            self.args[name] = self.__from_node(arg)
+
+    def __call__(self, node, *args, **kwargs):
+        self.node = node
+        assert self.node is not None
+        assert len(args) + len(kwargs) <= len(self.arg_names)
+        self.parse_args(args, kwargs)
+        for cmd, cmd_args, cmd_kwargs in self.commands:
+            func = self.node.get_cmd(cmd)
+            _args = [self.__from_local(arg) for arg in cmd_args]
+            _kwargs = {key: self.__from_local(arg) for key, arg in cmd_kwargs.items()}
+            self.node.root = func(self.node, *_args, **_kwargs)
+        return self.node.root
+
+    def __str__(self):
+        arg_str = ", ".join(self.arg_names)
+        cmd_str = "; ".join(cmd for cmd, _, _ in self.commands)
+        return f"({arg_str}) -> {{{cmd_str}}}"
+
+
+trivial_function = Function([], [])
