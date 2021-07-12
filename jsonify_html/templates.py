@@ -1,4 +1,5 @@
 from .types import *
+from .commands import build_in_commands
 import ruamel.yaml as yaml
 import re
 
@@ -43,7 +44,7 @@ class Function:
             func = self.node.get_cmd(cmd)
             _args = [self.__from_local(arg) for arg in cmd_args]
             _kwargs = {key: self.__from_local(arg) for key, arg in cmd_kwargs.items()}
-            func(self.node, *_args, **_kwargs)
+            self.node.root = func(self.node.root, *_args, **_kwargs)
         return self.node.root
 
 
@@ -60,7 +61,7 @@ class Node:
         self.final = attributes.pop("final", trivial_function)
         self.variables = dict()
         self.methods = dict()
-        self.__build_in_commands = dict()
+        self.__registered_commands = build_in_commands
         for name, value in attributes.items():
             if isinstance(value, Function):
                 self.methods[name] = value
@@ -75,7 +76,7 @@ class Node:
             node.methods.update(self.methods)
 
     def get_cmd(self, cmd):
-        return self.methods.get(cmd, None) or self.__build_in_commands.get(cmd, None)
+        return self.methods.get(cmd, None) or self.__registered_commands.get(cmd, None)
 
     def get_variable(self, ref):
         return self.variables.get(ref.name, Variable(ref.name, undefined))
@@ -97,7 +98,7 @@ class Node:
 
 VARIABLE_PATTERN = re.compile(r"^\$([a-zA-Z_][a-zA-Z0-9_]*)$")
 FUNCTION_PATTERN = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)\(([^()]*)\)$")
-LAMBDA_PATTERN = re.compile(r"")
+LAMBDA_PATTERN = re.compile(r"->")  # TODO
 ENTRY_PATTERN = re.compile(r"^([a-zA-Z][a-zA-Z0-9\[\],]+)\s+([a-zA-Z_][a-zA-Z0-9_]*)$")
 COMMA_PATTERN = re.compile(r",(?![^(]*\))")
 
@@ -123,6 +124,8 @@ def parse_args(data):
     args = list()
     kwargs = dict()
     for item in data:
+        if not item.strip():
+            continue
         if '=' in item:
             name, arg = item.split('=')
             kwargs[name.strip()] = parse_arg(arg.strip())
@@ -167,8 +170,8 @@ def parse_map(dtype, data):
             name, arg_list = match_function.groups()
             attributes[name] = parse_function(arg_list, child)
         elif match_entry:
-            dtype, name = match_entry.groups()
-            attributes[name] = parse_entry(dtype, child)
+            entry_dtype, name = match_entry.groups()
+            attributes[name] = parse_entry(entry_dtype, child)
         else:
             raise ValueError
     return Node(dtype, attributes)
