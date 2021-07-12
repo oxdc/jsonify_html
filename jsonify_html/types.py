@@ -121,6 +121,7 @@ class MapType(DataType):
 
 
 HashTable = Dictionary = Dict = Mapping = MapType()
+Object = Mapping[String, Any]
 
 
 class SetType(DataType):
@@ -193,6 +194,7 @@ TYPES = {
     "Dictionary": Dictionary,
     "Dict": Dict,
     "Mapping": Mapping,
+    "Object": Object,
     "Set": Set,
     "Tuple": Tuple,
     "DateTime": DateTime
