@@ -1,7 +1,8 @@
 import ruamel.yaml as yaml
 import re
+from copy import deepcopy
 from .types import *
-from .commands import build_in_commands
+from .commands import CommandManager
 
 
 class Node:
@@ -14,7 +15,7 @@ class Node:
         self.final = attributes.pop("final", trivial_function)
         self.__variables = dict()
         self.__methods = dict()
-        self.__registered_commands = build_in_commands
+        self.__registered_commands = CommandManager().commands
         for name, value in attributes.items():
             if isinstance(value, Function):
                 self.__methods[name] = value
@@ -57,7 +58,7 @@ class Node:
         self.init(self)
         if isinstance(self.dtype, MapType):
             for child in self.children.values():
-                child.root = self.root
+                child.root = deepcopy(self.root)
         self.parse(self)
         if isinstance(self.dtype, MapType):
             pairs = [(name, node.execute()) for name, node in self.children.items()]

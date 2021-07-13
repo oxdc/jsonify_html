@@ -1,8 +1,9 @@
 import re
-
+from lxml.html import fromstring, tostring
 from lxml.html.clean import Cleaner
 from lxml.cssselect import CSSSelector
 from .types import *
+from .utils import singleton
 import functools
 
 
@@ -25,6 +26,8 @@ def parse_selector(selector: str):
 def remove_preserve_tail(element):
     prev = element.getprevious()
     parent = element.getparent()
+    if parent is None:
+        return
     if element.tail:
         if prev is not None:
             prev.tail = (prev.tail or '') + element.tail
@@ -33,11 +36,43 @@ def remove_preserve_tail(element):
     parent.remove(element)
 
 
+@singleton
+class CommandManager:
+    def __init__(self):
+        self.__commands = dict()
+
+    def register(self, name, callback):
+        assert callable(callback)
+        self.__commands[name] = callback
+
+    def unregister(self, name):
+        if name in self.__commands:
+            del self.__commands[name]
+
+    @property
+    def commands(self):
+        return self.__commands
+
+
+def register_command(func=None, *, name=None):
+    def decorator(callback):
+        cmd_name = name or callback.__name__.replace("cmd_", "")
+        assert cmd_name
+        CommandManager().register(cmd_name, callback)
+        return callback
+    if func is None:
+        return decorator
+    else:
+        return decorator(func)
+
+
+@register_command
 @read_only
 def cmd_clean(node, **kwargs):
     return Cleaner(**kwargs).clean_html(node.root)
 
 
+@register_command
 @read_only
 def cmd_select(node, selector=None, *, css=None, xpath=None, first=False):
     if selector is not None:
@@ -56,9 +91,10 @@ def cmd_select(node, selector=None, *, css=None, xpath=None, first=False):
     return DOMs[0] if first and DOMs else DOMs
 
 
+@register_command
 @read_only
 def cmd_remove(node, selector=None, *, css=None, xpath=None, first=False):
-    DOMs = cmd_select(node.root, selector, css=css, xpath=xpath, first=first)
+    DOMs = cmd_select(node, selector, css=css, xpath=xpath, first=first)
     if first and DOMs:
         remove_preserve_tail(DOMs[0])
     else:
@@ -67,11 +103,22 @@ def cmd_remove(node, selector=None, *, css=None, xpath=None, first=False):
     return node.root
 
 
+@register_command
 @read_only
-def cmd_text(node, *, insert_space=True, normalize_spaces=True, ):
-    return node.root.text or ""
+def cmd_text(node, *, insert_space=True, normalize_spaces=True, keep_newline=False, encoding="utf-8"):
+    deliminator = ' ' if insert_space else ""
+    node.root = cmd_remove(node, css=["head", "script", "style", "pre"])
+    html = tostring(node.root).decode(encoding)
+    html = re.sub(r"<!--(?:.|\n)*?-->", deliminator, html)
+    html = re.sub(r"</?[^<>]*>", deliminator, html)
+    if normalize_spaces:
+        pattern = r"[^\S\r\n][^\S\r\n]+" if keep_newline else r"\s\s+"
+        html = re.sub(pattern, ' ', html).strip()
+    node.root = html
+    return html
 
 
+@register_command
 def cmd_eval(node, expr):
     if isinstance(expr, Function):
         return expr(node)
@@ -87,6 +134,7 @@ def cmd_eval(node, expr):
         return node.root
 
 
+@register_command
 def cmd_exec(node, expr):
     if isinstance(expr, Function):
         expr(node)
@@ -99,11 +147,13 @@ def cmd_exec(node, expr):
     return node.root
 
 
+@register_command
 def cmd_print(node, *args, **kwargs):
     print(*args, **kwargs)
     return node.root
 
 
+@register_command
 def cmd_set(node, variable, value):
     assert isinstance(variable, Variable)
     if isinstance(value, Function):
@@ -113,6 +163,7 @@ def cmd_set(node, variable, value):
     return node.root
 
 
+@register_command
 def cmd_foreach(node, func):
     assert isinstance(func, Function)
     argc = len(func.arg_names)
@@ -132,22 +183,10 @@ def cmd_foreach(node, func):
     return root
 
 
+@register_command
 def cmd_apply(node, root, template):
     template.value.root = root
     template.value.update_variables(node.variables)
     template.value.update_methods(node.methods)
     node.root = template.value.execute()
     return node.root
-
-
-build_in_commands = {
-    "clean": cmd_clean,
-    "select": cmd_select,
-    "text": cmd_text,
-    "eval": cmd_eval,
-    "exec": cmd_exec,
-    "print": cmd_print,
-    "set": cmd_set,
-    "foreach": cmd_foreach,
-    "apply": cmd_apply
-}
