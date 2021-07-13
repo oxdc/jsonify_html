@@ -115,12 +115,29 @@ def cmd_set(node, variable, value):
 
 def cmd_foreach(node, func):
     assert isinstance(func, Function)
+    argc = len(func.arg_names)
     root = []
-    for item in node.root:
+    for i, item in enumerate(node.root):
         node.root = item
-        root.append(func(node))
+        if argc == 0:
+            result = func(node)
+        elif argc == 1:
+            result = func(node, item)
+        elif argc == 2:
+            result = func(node, i, item)
+        else:
+            result = func(node)
+        root.append(result)
     node.root = root
     return root
+
+
+def cmd_apply(node, root, template):
+    template.value.root = root
+    template.value.update_variables(node.variables)
+    template.value.update_methods(node.methods)
+    node.root = template.value.execute()
+    return node.root
 
 
 build_in_commands = {
@@ -131,5 +148,6 @@ build_in_commands = {
     "exec": cmd_exec,
     "print": cmd_print,
     "set": cmd_set,
-    "foreach": cmd_foreach
+    "foreach": cmd_foreach,
+    "apply": cmd_apply
 }

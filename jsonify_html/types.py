@@ -1,5 +1,6 @@
 from inspect import getmembers, isfunction
 from struct import pack, unpack
+from dateutil import parser as date_parser
 from .utils import singleton
 
 
@@ -15,6 +16,9 @@ Any = DataType()
 class UndefinedType(DataType):
     def convert(self, obj):
         return None
+
+    def __bool__(self):
+        return False
 
 
 undefined = Undefined = UndefinedType()
@@ -156,7 +160,7 @@ Tuple = TupleType()
 
 class DateTimeType(DataType):
     def convert(self, obj):
-        pass
+        return date_parser.parse(obj)
 
 
 DateTime = DateTimeType()
@@ -178,6 +182,9 @@ class Variable:
 
     def __str__(self):
         return f"${self.name} = {self.value}"
+
+    def __bool__(self):
+        return self.value is not undefined
 
 
 class Ref:
@@ -201,22 +208,31 @@ class Function:
     def __from_local(self, arg):
         return self.node.get_variable(arg) or self.args.get(arg.name, None) if isinstance(arg, Ref) else arg
 
-    def parse_args(self, args, kwargs):
+    def __parse_args(self, args, kwargs):
         for name, arg in zip(self.arg_names, args):
             self.args[name] = self.__from_node(arg)
         for name, arg in kwargs.items():
             assert name in self.arg_names
             self.args[name] = self.__from_node(arg)
 
+    def __convert_ref(self, args, kwargs):
+        _args = [Ref(arg) if arg in self.arg_names else arg for arg in args]
+        _kwargs = {key: Ref(arg) if arg in self.arg_names else arg for key, arg in kwargs.items()}
+        return _args, _kwargs
+
+    def __resolve_ref(self, args, kwargs):
+        _args = [self.__from_local(arg) for arg in args]
+        _kwargs = {key: self.__from_local(arg) for key, arg in kwargs.items()}
+        return _args, _kwargs
+
     def __call__(self, node, *args, **kwargs):
         self.node = node
         assert self.node is not None
         assert len(args) + len(kwargs) <= len(self.arg_names)
-        self.parse_args(args, kwargs)
+        self.__parse_args(args, kwargs)
         for cmd, cmd_args, cmd_kwargs in self.commands:
             func = self.node.get_cmd(cmd)
-            _args = [self.__from_local(arg) for arg in cmd_args]
-            _kwargs = {key: self.__from_local(arg) for key, arg in cmd_kwargs.items()}
+            _args, _kwargs = self.__resolve_ref(*self.__convert_ref(cmd_args, cmd_kwargs))
             self.node.root = func(self.node, *_args, **_kwargs)
         return self.node.root
 

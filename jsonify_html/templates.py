@@ -12,28 +12,46 @@ class Node:
         self.init = attributes.pop("init", trivial_function)
         self.parse = attributes.pop("parse", trivial_function)
         self.final = attributes.pop("final", trivial_function)
-        self.variables = dict()
-        self.methods = dict()
+        self.__variables = dict()
+        self.__methods = dict()
         self.__registered_commands = build_in_commands
         for name, value in attributes.items():
             if isinstance(value, Function):
-                self.methods[name] = value
+                self.__methods[name] = value
             elif isinstance(value, Node) and isinstance(self.dtype, MapType):
                 self.children[name] = value
             elif isinstance(value, Variable):
-                self.variables[name] = value
+                self.__variables[name] = value
             else:
                 print(name, value)
                 raise AttributeError
         for node in self.children.values():
-            node.variables.update(self.variables)
-            node.methods.update(self.methods)
+            node.update_variables(self.__variables)
+            node.update_methods(self.__methods)
+
+    @property
+    def variables(self):
+        return self.__variables
+
+    @property
+    def methods(self):
+        return self.__methods
+
+    def update_variables(self, variables):
+        self.__variables.update(variables)
+        for node in self.children.values():
+            node.update_variables(self.__variables)
+
+    def update_methods(self, methods):
+        self.__methods.update(methods)
+        for node in self.children.values():
+            node.update_methods(self.__methods)
 
     def get_cmd(self, cmd):
-        return self.methods.get(cmd, None) or self.__registered_commands.get(cmd, None)
+        return self.__methods.get(cmd, None) or self.__registered_commands.get(cmd, None)
 
     def get_variable(self, ref):
-        return self.variables.get(ref.name, Variable(ref.name, undefined))
+        return self.__variables.get(ref.name, Variable(ref.name, undefined))
 
     def execute(self):
         self.init(self)
